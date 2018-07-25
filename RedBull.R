@@ -13,3 +13,10 @@ laranjas<-laranjas[!is.na(laranjas$medida),]
 boxplot(uvas$medida,laranjas$medida)
 
 ggplot(amostra, aes(x=Medida, color=Sabor))+geom_density()
+
+
+# Depois que limpar os dados podemos fazer um T-Test.
+# Vamos assumir que não existe diferenças... Isso será nossa hipótese nula.
+# Hipotese Alternativa é que existe diferencas
+#podemos aplicar um T-Test
+t.test(data=amostra, Medida ~ Sabor)
