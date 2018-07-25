@@ -10,6 +10,11 @@ laranjas<-amostra[amostra$sabor=="uva",]
 uvas<-amostra[amostra$sabor=="laranja",]
 uvas<-uvas[!is.na(uvas$medida),]
 laranjas<-laranjas[!is.na(laranjas$medida),]
+
+
+# Amostragem %>% select(Sabor,Medida)%>% filter(Sabor == "uva")
+
+
 boxplot(uvas$medida,laranjas$medida)
 
 ggplot(amostra, aes(x=Medida, color=Sabor))+geom_density()
