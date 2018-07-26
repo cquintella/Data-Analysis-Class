@@ -1,13 +1,29 @@
 
 #LOAD
 amostra<-read.csv("redbul.csv", sep=";")
+#ajustar nome de colunas
 cnames(amostra)<-c("sabor","lata", "medida")
+
+
+#vamos entender o dado
 head(amostra)
+tail(amostra)
+str(amostra)
+names(amostra)
+summary(amostra)
+
+#Limpeza de Dados
 amostra %>% 
     group_by(sabor) %>% 
     summarise(mean(medida, na.rm=TRUE))
-laranjas<-amostra[amostra$sabor=="uva",]
-uvas<-amostra[amostra$sabor=="laranja",]
+
+
+
+laranjas<-amostra[amostra$sabor=="laranjas",]
+uvas<-amostra[amostra$sabor=="uvas",]
+
+
+
 uvas<-uvas[!is.na(uvas$medida),]
 laranjas<-laranjas[!is.na(laranjas$medida),]
 
