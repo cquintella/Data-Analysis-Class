@@ -1,0 +1,112 @@
+---
+title: "Explorando dados do Uber"
+author: "Quintella"
+date: "7/24/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+# Load the .csv files
+apr14 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-apr14.csv")
+may14 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-may14.csv")
+jun14 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-jun14.csv")
+jul14 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-jul14.csv")
+aug14 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-aug14.csv")
+sep14 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-sep14.csv")
+```
+
+## Including Plots
+
+Preparacao do Dado
+
+```{r pressure, echo=FALSE}
+library(dplyr)
+data14 <- bind_rows(apr14, may14, jun14, jul14, aug14, sep14)
+
+
+library(VIM)
+aggr(data14)
+
+```
+
+Ajustando e preparando os dados
+
+
+```{r pressure, echo=FALSE}
+library(lubridate)
+# Separate or mutate the Date/Time columns
+data14$Date.Time <- mdy_hms(data14$Date.Time)
+data14$Year <- factor(year(data14$Date.Time))
+data14$Month <- factor(month(data14$Date.Time))
+data14$Day <- factor(day(data14$Date.Time))
+data14$Weekday <- factor(wday(data14$Date.Time))
+data14$Hour <- factor(hour(data14$Date.Time))
+data14$Minute <- factor(minute(data14$Date.Time))
+data14$Second <- factor(second(data14$Date.Time))
+```
+
+Vamos ver como ficou...
+```{r pressure, echo=FALSE}
+head(data14, n=10)
+```
+
+Agora vamos dividir o dado em dois grupos treinamento e testes.
+
+Nova Iorque tem 5 distritos, os chamados 5boroughs.
+Vamos usar um Kmeans de k=5 para tentar ideintificar os boroughs.
+
+
+
+```{r pressure, echo=FALSE}
+set.seed(20)
+clusters <- kmeans(data14[,2:3], 5)
+#vamos criar uma coluna nova de vizinhança
+data14$Borough <- as.factor(clusters$cluster)
+str(clusters)
+```
+
+Vamos fazer um plot para ficar mais fácil vizualizar.
+
+```{r pressure, echo=FALSE}
+library(ggmap)
+
+NYCMap <- get_map("New York", zoom = 10)
+ggmap(NYCMap) + geom_point(aes(x = Lon[], y = Lat[], colour = as.factor(Borough)),data = data14) +
+  ggtitle("NYC Boroughs using KMean")
+```
+
+Agora podemos analisar o negócio do Uber para cada vizinhança de forma separada
+
+
+```{r pressure, echo=FALSE}
+library(DT)
+
+data14$Month <- as.double(data14$Month)
+month_borough_14 <- count_(data14, vars = c('Month', 'Borough'), sort = TRUE) %>% 
+  arrange(Month, Borough)
+datatable(month_borough_14)
+```
+
+Uma visão grafica
+```{r pressure, echo=FALSE}
+library(dplyr)
+monthly_growth <- month_borough_14 %>%
+mutate(Date = paste("04", Month)) %>%
+  ggplot(aes(Month, n, colour = Borough)) + geom_line() +
+  ggtitle("Uber Monthly Growth - 2014")
+monthly_growth
+```
+K-means é muito poderoso, mas tem uma desvantagem que é precisar que a gente informe um k, mas para esse problema o que a gente queria era identificar as vizinhancas e isso foi fácil (sabemos que sao 5). Outro problema do k-means é que ele é muito sensível a outliers.
+
+https://www.datacamp.com/community/data-science-cheatsheets
+https://www.kaggle.com/fivethirtyeight/uber-pickups-in-new-york-city/data
